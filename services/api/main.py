@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
 from core.database import engine
+from routers.resume import router as resume_router
+from routers.company import router as company_router
+from routers.people import router as people_router
+from routers.outreach import router as outreach_router
 
 app = FastAPI(
     title="CareerOS API",
@@ -18,6 +22,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(resume_router, prefix="/api/v1")
+app.include_router(company_router, prefix="/api/v1")
+app.include_router(people_router, prefix="/api/v1")
+app.include_router(outreach_router, prefix="/api/v1")
 
 
 @app.get("/health")
