@@ -196,3 +196,20 @@ class JobAnalysisResponse(BaseModel):
 class JobDetailResponse(BaseModel):
     job: JobResponse
     analysis: Optional[JobAnalysisResponse] = None
+
+
+class ResumeMatchRequest(BaseModel):
+    pass
+
+
+class ResumeMatchResponse(BaseModel):
+    id: uuid.UUID
+    overall_score: float = 0.0
+    skill_matches: list[dict] = []
+    strengths: list[str] = []
+    weaknesses: list[str] = []
+    mention_projects: list[str] = []
+    avoid_mentioning: list[str] = []
+    recommendation: str = ""
+
+    model_config = {"from_attributes": True}

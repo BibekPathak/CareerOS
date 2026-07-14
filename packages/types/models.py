@@ -245,6 +245,31 @@ class JobAnalysisOutput(BaseModel):
     interview_difficulty: str
 
 
+class SkillMatch(BaseModel):
+    skill: str
+    status: str
+    importance: str
+    suggestion: str | None = None
+
+
+class ResumeMatchInput(BaseModel):
+    job_title: str
+    job_description: str
+    job_skills: list[str]
+    company_name: str
+    resume: ResumeOutput
+
+
+class ResumeMatchOutput(BaseModel):
+    overall_score: float
+    skill_matches: list[SkillMatch]
+    strengths: list[str]
+    weaknesses: list[str]
+    mention_projects: list[str]
+    avoid_mentioning: list[str]
+    recommendation: str
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -257,4 +282,5 @@ __all__ = [
     "RelationshipEdge", "OrgTeamNode", "GraphPerson",
     "OrgGraphInput", "OrgGraphOutput",
     "PersonToContact", "JobAnalysisInput", "JobAnalysisOutput",
+    "SkillMatch", "ResumeMatchInput", "ResumeMatchOutput",
 ]

@@ -9,6 +9,7 @@ from routers.people import router as people_router
 from routers.outreach import router as outreach_router
 from routers.graph import router as graph_router
 from routers.job import router as job_router
+from routers.match import router as match_router
 
 app = FastAPI(
     title="CareerOS API",
@@ -31,6 +32,7 @@ app.include_router(people_router, prefix="/api/v1")
 app.include_router(outreach_router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")
 app.include_router(job_router, prefix="/api/v1")
+app.include_router(match_router, prefix="/api/v1")
 
 
 @app.get("/health")

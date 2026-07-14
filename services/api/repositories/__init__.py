@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.models import (
     User, Document, ResumeProfile, Company, CompanyProfile,
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
-    OrgTeam, OrgRelationship,
+    OrgTeam, OrgRelationship, ResumeMatch,
 )
 
 
@@ -207,7 +207,7 @@ class PersonProfileRepository:
         return await self.create(profile)
 
     async def get_ranked_by_company(self, company_id) -> list[tuple[Person, PersonProfile]]:
-        from sqlalchemy import select
+from sqlalchemy import select, delete as sa_delete
         result = await self.session.execute(
             select(Person, PersonProfile)
             .join(PersonProfile, PersonProfile.person_id == Person.id)
@@ -353,7 +353,7 @@ class OrgTeamRepository:
 
     async def clear_company(self, company_id):
         await self.session.execute(
-            select(OrgTeam).where(OrgTeam.company_id == company_id).delete()
+            sa_delete(OrgTeam).where(OrgTeam.company_id == company_id)
         )
         await self.session.flush()
 
@@ -422,6 +422,40 @@ class OrgRelationshipRepository:
 
     async def clear_company(self, company_id):
         await self.session.execute(
-            select(OrgRelationship).where(OrgRelationship.company_id == company_id).delete()
+            sa_delete(OrgRelationship).where(OrgRelationship.company_id == company_id)
         )
         await self.session.flush()
+
+
+class ResumeMatchRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_user_and_job(self, user_id, job_id) -> Optional[ResumeMatch]:
+        result = await self.session.execute(
+            select(ResumeMatch).where(
+                ResumeMatch.user_id == user_id,
+                ResumeMatch.job_id == job_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_user(self, user_id) -> list[ResumeMatch]:
+        result = await self.session.execute(
+            select(ResumeMatch).where(ResumeMatch.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
+    async def create(self, match: ResumeMatch) -> ResumeMatch:
+        self.session.add(match)
+        await self.session.flush()
+        return match
+
+    async def upsert(self, match: ResumeMatch) -> ResumeMatch:
+        existing = await self.get_by_user_and_job(match.user_id, match.job_id)
+        if existing:
+            match.id = existing.id
+            await self.session.merge(match)
+            await self.session.flush()
+            return match
+        return await self.create(match)

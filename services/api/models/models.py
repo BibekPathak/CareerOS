@@ -268,3 +268,17 @@ class Embedding(Base, UUIDMixin, TimestampMixin):
     resource_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     embedding = None
     metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+
+class ResumeMatch(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "resume_matches"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    job_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    overall_score: Mapped[Optional[float]] = mapped_column(Float)
+    skill_matches: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    strengths: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    weaknesses: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    mention_projects: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    avoid_mentioning: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    recommendation: Mapped[Optional[str]] = mapped_column(Text)

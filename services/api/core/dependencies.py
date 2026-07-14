@@ -8,6 +8,7 @@ from repositories import (
     PersonProfileRepository, JobRepository, OutreachMessageRepository,
     InteractionRepository, NoteRepository, EmbeddingRepository,
     OrgTeamRepository, OrgRelationshipRepository,
+    ResumeMatchRepository,
 )
 
 
@@ -65,3 +66,7 @@ async def get_org_team_repo(session: AsyncSession = Depends(get_db)) -> OrgTeamR
 
 async def get_org_relationship_repo(session: AsyncSession = Depends(get_db)) -> OrgRelationshipRepository:
     return OrgRelationshipRepository(session)
+
+
+async def get_resume_match_repo(session: AsyncSession = Depends(get_db)) -> ResumeMatchRepository:
+    return ResumeMatchRepository(session)
