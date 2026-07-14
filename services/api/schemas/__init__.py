@@ -55,6 +55,21 @@ class CompanyProfileResponse(BaseModel):
     careers_page_url: Optional[str] = None
     open_positions: list[dict]
     recent_news: list[dict]
+
+    hiring_velocity: Optional[dict] = None
+    backend_team_size: Optional[int] = None
+    languages_used: list[str] = []
+    hiring_manager_name: Optional[str] = None
+    recruiters: list[dict] = []
+    interns: list[dict] = []
+    ex_interns: list[dict] = []
+    recent_promotions: list[dict] = []
+    conference_talks: list[dict] = []
+    interview_difficulty: Optional[str] = None
+    likely_interview_topics: list[str] = []
+    interesting_github_repos: list[dict] = []
+    org_chart_summary: Optional[str] = None
+
     created_at: datetime
 
     model_config = {"from_attributes": True}

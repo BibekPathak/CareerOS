@@ -89,6 +89,20 @@ class CompanyProfile(Base, UUIDMixin, TimestampMixin):
     open_positions: Mapped[list[dict]] = mapped_column(JSONB, default=list)
     recent_news: Mapped[list[dict]] = mapped_column(JSONB, default=list)
 
+    hiring_velocity: Mapped[Optional[dict]] = mapped_column(JSONB)
+    backend_team_size: Mapped[Optional[int]]
+    languages_used: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    hiring_manager_name: Mapped[Optional[str]] = mapped_column(String(255))
+    recruiters: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    interns: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    ex_interns: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    recent_promotions: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    conference_talks: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    interview_difficulty: Mapped[Optional[str]] = mapped_column(String(100))
+    likely_interview_topics: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    interesting_github_repos: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    org_chart_summary: Mapped[Optional[str]] = mapped_column(Text)
+
     company: Mapped["Company"] = relationship(back_populates="profiles", foreign_keys=[company_id])
 
 
