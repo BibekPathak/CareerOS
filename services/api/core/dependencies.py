@@ -8,7 +8,7 @@ from repositories import (
     PersonProfileRepository, JobRepository, OutreachMessageRepository,
     InteractionRepository, NoteRepository, EmbeddingRepository,
     OrgTeamRepository, OrgRelationshipRepository,
-    ResumeMatchRepository,
+    ResumeMatchRepository, OutreachIntelligenceRepository,
 )
 
 
@@ -70,3 +70,7 @@ async def get_org_relationship_repo(session: AsyncSession = Depends(get_db)) -> 
 
 async def get_resume_match_repo(session: AsyncSession = Depends(get_db)) -> ResumeMatchRepository:
     return ResumeMatchRepository(session)
+
+
+async def get_outreach_intelligence_repo(session: AsyncSession = Depends(get_db)) -> OutreachIntelligenceRepository:
+    return OutreachIntelligenceRepository(session)

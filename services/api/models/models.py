@@ -282,3 +282,16 @@ class ResumeMatch(Base, UUIDMixin, TimestampMixin):
     mention_projects: Mapped[list[str]] = mapped_column(JSONB, default=list)
     avoid_mentioning: Mapped[list[str]] = mapped_column(JSONB, default=list)
     recommendation: Mapped[Optional[str]] = mapped_column(Text)
+
+
+class OutreachIntelligence(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "outreach_intelligence"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, nullable=False)
+    best_conversation_starters: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    topics_to_avoid: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    person_interests: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    response_approach: Mapped[Optional[str]] = mapped_column(String(100))
+    optimal_send_time: Mapped[Optional[str]] = mapped_column(String(100))
+    referral_readiness: Mapped[Optional[str]] = mapped_column(String(50))

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.models import (
     User, Document, ResumeProfile, Company, CompanyProfile,
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
-    OrgTeam, OrgRelationship, ResumeMatch,
+    OrgTeam, OrgRelationship, ResumeMatch, OutreachIntelligence,
 )
 
 
@@ -459,3 +459,25 @@ class ResumeMatchRepository:
             await self.session.flush()
             return match
         return await self.create(match)
+
+
+class OutreachIntelligenceRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_person(self, person_id) -> Optional[OutreachIntelligence]:
+        result = await self.session.execute(
+            select(OutreachIntelligence).where(OutreachIntelligence.person_id == person_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def upsert(self, oi: OutreachIntelligence) -> OutreachIntelligence:
+        existing = await self.get_by_person(oi.person_id)
+        if existing:
+            oi.id = existing.id
+            await self.session.merge(oi)
+            await self.session.flush()
+            return oi
+        self.session.add(oi)
+        await self.session.flush()
+        return oi

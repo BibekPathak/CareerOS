@@ -8,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from core.dependencies import (
     get_person_repo, get_person_profile_repo, get_resume_profile_repo,
-    get_company_repo, get_outreach_repo,
+    get_company_repo, get_outreach_repo, get_outreach_intelligence_repo,
 )
-from models.models import OutreachMessage, MessageType, MessageStatus
-from schemas import OutreachMessageResponse
+from models.models import OutreachMessage, MessageType, MessageStatus, OutreachIntelligence
+from schemas import OutreachMessageResponse, OutreachIntelligenceResponse
 from packages.ai.agents.outreach_agent import generate_outreach
+from packages.ai.agents.outreach_intelligence_agent import generate_outreach_intelligence
 
 router = APIRouter(prefix="/outreach", tags=["outreach"])
 
@@ -69,6 +70,33 @@ async def generate(
         team_relevance_score=(person_profile.ranking_factors or {}).get("team_relevance", 0),
     )
 
+    oi_repo = get_outreach_intelligence_repo(db)
+    existing_intel = await oi_repo.get_by_person(req.person_id)
+
+    if not existing_intel:
+        intel = await generate_outreach_intelligence(
+            person_name=person.name,
+            person_role=person.role,
+            person_summary=person.summary or "",
+            expertise_areas=person.expertise_areas or [],
+            company_name=company.name,
+            resume=resume_input,
+        )
+        oi = OutreachIntelligence(
+            user_id=req.user_id,
+            person_id=req.person_id,
+            best_conversation_starters=intel.best_conversation_starters,
+            topics_to_avoid=intel.topics_to_avoid,
+            person_interests=intel.person_interests,
+            response_approach=intel.response_approach,
+            optimal_send_time=intel.optimal_send_time,
+            referral_readiness=intel.referral_readiness,
+        )
+        await oi_repo.upsert(oi)
+    else:
+        intel = None
+        oi = existing_intel
+
     result = await generate_outreach(
         resume=resume_input,
         target_person=ranked_person,
@@ -108,7 +136,8 @@ async def generate(
                 created_at=m.created_at,
             )
             for m in saved
-        ]
+        ],
+        "intelligence": OutreachIntelligenceResponse.model_validate(oi) if oi else None,
     }
 
 
@@ -129,3 +158,16 @@ async def get_messages(
         )
         for m in messages
     ]
+
+
+@router.get("/intelligence/{person_id}", response_model=OutreachIntelligenceResponse)
+async def get_intelligence(
+    person_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    oi_repo = get_outreach_intelligence_repo(db)
+    oi = await oi_repo.get_by_person(person_id)
+    if not oi:
+        raise HTTPException(status_code=404, detail="No intelligence found. Run outreach generate first.")
+    return OutreachIntelligenceResponse.model_validate(oi)
+

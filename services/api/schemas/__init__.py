@@ -213,3 +213,16 @@ class ResumeMatchResponse(BaseModel):
     recommendation: str = ""
 
     model_config = {"from_attributes": True}
+
+
+class OutreachIntelligenceResponse(BaseModel):
+    id: uuid.UUID
+    person_id: uuid.UUID
+    best_conversation_starters: list[str] = []
+    topics_to_avoid: list[str] = []
+    person_interests: list[str] = []
+    response_approach: Optional[str] = None
+    optimal_send_time: Optional[str] = None
+    referral_readiness: Optional[str] = None
+
+    model_config = {"from_attributes": True}

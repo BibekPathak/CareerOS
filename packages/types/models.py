@@ -270,6 +270,24 @@ class ResumeMatchOutput(BaseModel):
     recommendation: str
 
 
+class OutreachIntelligenceInput(BaseModel):
+    person_name: str
+    person_role: str | None = None
+    person_summary: str
+    expertise_areas: list[str] = []
+    company_name: str
+    resume: ResumeOutput
+
+
+class OutreachIntelligenceOutput(BaseModel):
+    best_conversation_starters: list[str]
+    topics_to_avoid: list[str]
+    person_interests: list[str]
+    response_approach: str
+    optimal_send_time: str
+    referral_readiness: str
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -283,4 +301,5 @@ __all__ = [
     "OrgGraphInput", "OrgGraphOutput",
     "PersonToContact", "JobAnalysisInput", "JobAnalysisOutput",
     "SkillMatch", "ResumeMatchInput", "ResumeMatchOutput",
+    "OutreachIntelligenceInput", "OutreachIntelligenceOutput",
 ]
