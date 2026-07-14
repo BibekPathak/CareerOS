@@ -218,6 +218,33 @@ class OrgGraphOutput(BaseModel):
     people: list[GraphPerson]
 
 
+class PersonToContact(BaseModel):
+    name: str
+    role: str | None = None
+    reason: str
+
+
+class JobAnalysisInput(BaseModel):
+    job_title: str
+    job_description: str
+    company_name: str
+    resume: ResumeOutput
+    context: str | None = None
+
+
+class JobAnalysisOutput(BaseModel):
+    required_skills: list[str]
+    nice_to_have_skills: list[str]
+    missing_skills: list[str]
+    resume_match_score: float
+    strengths: list[str]
+    weaknesses: list[str]
+    people_to_contact: list[PersonToContact]
+    projects_to_mention: list[str]
+    likely_interview_topics: list[str]
+    interview_difficulty: str
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -229,4 +256,5 @@ __all__ = [
     "OutreachInput", "MessageSet", "OutreachOutput",
     "RelationshipEdge", "OrgTeamNode", "GraphPerson",
     "OrgGraphInput", "OrgGraphOutput",
+    "PersonToContact", "JobAnalysisInput", "JobAnalysisOutput",
 ]

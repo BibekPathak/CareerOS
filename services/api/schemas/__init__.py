@@ -162,3 +162,37 @@ class OrgGraphResponse(BaseModel):
 class PathResponse(BaseModel):
     path: list[OrgRelationshipResponse]
     length: int
+
+
+class JobResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    title: str
+    description: Optional[str] = None
+    url: Optional[str] = None
+    source: Optional[str] = None
+    skills: list[str] = []
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class JobAnalysisResponse(BaseModel):
+    id: uuid.UUID
+    required_skills: list[str] = []
+    nice_to_have_skills: list[str] = []
+    missing_skills: list[str] = []
+    resume_match_score: Optional[float] = None
+    strengths: list[str] = []
+    weaknesses: list[str] = []
+    people_to_contact: list[dict] = []
+    projects_to_mention: list[str] = []
+    likely_interview_topics: list[str] = []
+    interview_difficulty: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class JobDetailResponse(BaseModel):
+    job: JobResponse
+    analysis: Optional[JobAnalysisResponse] = None

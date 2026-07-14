@@ -153,6 +153,17 @@ class Job(Base, UUIDMixin, TimestampMixin):
     skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
     metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
 
+    required_skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    nice_to_have_skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    missing_skills: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    resume_match_score: Mapped[Optional[float]] = mapped_column(Float)
+    strengths: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    weaknesses: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    people_to_contact: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    projects_to_mention: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    likely_interview_topics: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    interview_difficulty: Mapped[Optional[str]] = mapped_column(String(50))
+
     company: Mapped["Company"] = relationship(back_populates="jobs", foreign_keys=[company_id])
 
 

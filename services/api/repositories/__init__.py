@@ -232,6 +232,24 @@ class JobRepository:
         await self.session.flush()
         return jobs
 
+    async def get_by_id(self, job_id) -> Optional[Job]:
+        return await self.session.get(Job, job_id)
+
+    async def update(self, job: Job) -> Job:
+        await self.session.merge(job)
+        await self.session.flush()
+        return job
+
+    async def update_analysis(self, job_id, **kwargs) -> Job | None:
+        job = await self.session.get(Job, job_id)
+        if not job:
+            return None
+        for key, value in kwargs.items():
+            if hasattr(job, key):
+                setattr(job, key, value)
+        await self.session.flush()
+        return job
+
 
 class OutreachMessageRepository:
     def __init__(self, session: AsyncSession):
