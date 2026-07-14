@@ -226,3 +226,31 @@ class OutreachIntelligenceResponse(BaseModel):
     referral_readiness: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class ConversationEventResponse(BaseModel):
+    id: uuid.UUID
+    person_id: uuid.UUID
+    event_type: str
+    event_data: Optional[dict] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class FollowUpSuggestionResponse(BaseModel):
+    id: uuid.UUID
+    person_id: uuid.UUID
+    suggestion_type: str
+    reasoning: Optional[str] = None
+    suggested_message: Optional[str] = None
+    urgency: str = "medium"
+    is_read: bool = False
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TimelineResponse(BaseModel):
+    events: list[ConversationEventResponse]
+    suggestions: list[FollowUpSuggestionResponse]

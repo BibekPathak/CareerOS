@@ -9,6 +9,7 @@ from repositories import (
     InteractionRepository, NoteRepository, EmbeddingRepository,
     OrgTeamRepository, OrgRelationshipRepository,
     ResumeMatchRepository, OutreachIntelligenceRepository,
+    ConversationMemoryRepository, FollowUpSuggestionRepository,
 )
 
 
@@ -74,3 +75,11 @@ async def get_resume_match_repo(session: AsyncSession = Depends(get_db)) -> Resu
 
 async def get_outreach_intelligence_repo(session: AsyncSession = Depends(get_db)) -> OutreachIntelligenceRepository:
     return OutreachIntelligenceRepository(session)
+
+
+async def get_conversation_memory_repo(session: AsyncSession = Depends(get_db)) -> ConversationMemoryRepository:
+    return ConversationMemoryRepository(session)
+
+
+async def get_follow_up_repo(session: AsyncSession = Depends(get_db)) -> FollowUpSuggestionRepository:
+    return FollowUpSuggestionRepository(session)

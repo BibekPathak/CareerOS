@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import String, Text, Date, Float, Enum as SAEnum
+from sqlalchemy import String, Text, Date, Float, Boolean, Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -295,3 +295,37 @@ class OutreachIntelligence(Base, UUIDMixin, TimestampMixin):
     response_approach: Mapped[Optional[str]] = mapped_column(String(100))
     optimal_send_time: Mapped[Optional[str]] = mapped_column(String(100))
     referral_readiness: Mapped[Optional[str]] = mapped_column(String(50))
+
+
+class ConversationEventType(str, enum.Enum):
+    MESSAGE_SENT = "message_sent"
+    MESSAGE_READ = "message_read"
+    RESPONSE_RECEIVED = "response_received"
+    FOLLOW_UP_SENT = "follow_up_sent"
+    CONNECTION_ACCEPTED = "connection_accepted"
+    MEETING_SCHEDULED = "meeting_scheduled"
+    PERSON_POSTED = "person_posted"
+    CONNECTED = "connected"
+
+
+class ConversationMemory(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "conversation_memory"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    event_type: Mapped[ConversationEventType] = mapped_column(SAEnum(ConversationEventType), nullable=False)
+    event_data: Mapped[Optional[dict]] = mapped_column(JSONB)
+    context_snapshot: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+
+class FollowUpSuggestion(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "follow_up_suggestions"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    trigger_event_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    suggestion_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    reasoning: Mapped[Optional[str]] = mapped_column(Text)
+    suggested_message: Mapped[Optional[str]] = mapped_column(Text)
+    urgency: Mapped[str] = mapped_column(String(20), default="medium")
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)

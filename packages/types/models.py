@@ -288,6 +288,42 @@ class OutreachIntelligenceOutput(BaseModel):
     referral_readiness: str
 
 
+class ConversationEvent(BaseModel):
+    person_id: str
+    event_type: str
+    event_data: dict | None = None
+
+
+class TimelineEntry(BaseModel):
+    event_type: str
+    event_data: dict | None = None
+    timestamp: str
+
+
+class MemoryAnalysisInput(BaseModel):
+    person_name: str
+    timeline: list[TimelineEntry]
+    recent_activity: str | None = None
+
+
+class MemoryAnalysisOutput(BaseModel):
+    should_follow_up: bool
+    reasoning: str
+    timing_suggestion: str
+    suggested_message: str | None = None
+    urgency: str
+
+
+class FollowUpSuggestionOut(BaseModel):
+    id: str | None = None
+    person_name: str
+    suggestion_type: str
+    reasoning: str
+    suggested_message: str | None = None
+    urgency: str
+    is_read: bool
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -302,4 +338,6 @@ __all__ = [
     "PersonToContact", "JobAnalysisInput", "JobAnalysisOutput",
     "SkillMatch", "ResumeMatchInput", "ResumeMatchOutput",
     "OutreachIntelligenceInput", "OutreachIntelligenceOutput",
+    "ConversationEvent", "TimelineEntry",
+    "MemoryAnalysisInput", "MemoryAnalysisOutput", "FollowUpSuggestionOut",
 ]

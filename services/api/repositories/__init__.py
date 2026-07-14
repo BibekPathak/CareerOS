@@ -8,6 +8,7 @@ from models.models import (
     User, Document, ResumeProfile, Company, CompanyProfile,
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
     OrgTeam, OrgRelationship, ResumeMatch, OutreachIntelligence,
+    ConversationMemory, FollowUpSuggestion,
 )
 
 
@@ -481,3 +482,53 @@ class OutreachIntelligenceRepository:
         self.session.add(oi)
         await self.session.flush()
         return oi
+
+
+class ConversationMemoryRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_person(self, person_id) -> list[ConversationMemory]:
+        result = await self.session.execute(
+            select(ConversationMemory)
+            .where(ConversationMemory.person_id == person_id)
+            .order_by(ConversationMemory.created_at.asc())
+        )
+        return list(result.scalars().all())
+
+    async def create(self, event: ConversationMemory) -> ConversationMemory:
+        self.session.add(event)
+        await self.session.flush()
+        return event
+
+
+class FollowUpSuggestionRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_user(self, user_id) -> list[FollowUpSuggestion]:
+        result = await self.session.execute(
+            select(FollowUpSuggestion)
+            .where(FollowUpSuggestion.user_id == user_id)
+            .order_by(FollowUpSuggestion.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_by_person(self, person_id) -> list[FollowUpSuggestion]:
+        result = await self.session.execute(
+            select(FollowUpSuggestion)
+            .where(FollowUpSuggestion.person_id == person_id)
+            .order_by(FollowUpSuggestion.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def create(self, suggestion: FollowUpSuggestion) -> FollowUpSuggestion:
+        self.session.add(suggestion)
+        await self.session.flush()
+        return suggestion
+
+    async def mark_read(self, suggestion_id) -> None:
+        sug = await self.session.get(FollowUpSuggestion, suggestion_id)
+        if sug:
+            sug.is_read = True
+            await self.session.flush()
