@@ -2,7 +2,7 @@ import uuid
 from datetime import date
 from typing import Optional
 
-from sqlalchemy import String, Text, Date, Enum as SAEnum
+from sqlalchemy import String, Text, Date, Float, Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -117,6 +117,13 @@ class Person(Base, UUIDMixin, TimestampMixin):
     summary: Mapped[Optional[str]] = mapped_column(Text)
     metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
 
+    team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    influence_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    response_probability: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    referral_probability: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    activity_score: Mapped[Optional[float]] = mapped_column(Float, default=0.0)
+    expertise_areas: Mapped[list[str]] = mapped_column(JSONB, default=list)
+
     company: Mapped["Company"] = relationship(back_populates="people", foreign_keys=[company_id])
     profiles: Mapped[list["PersonProfile"]] = relationship(back_populates="person", cascade="all, delete-orphan")
     outreach_messages: Mapped[list["OutreachMessage"]] = relationship(back_populates="person", cascade="all, delete-orphan")
@@ -147,6 +154,41 @@ class Job(Base, UUIDMixin, TimestampMixin):
     metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
 
     company: Mapped["Company"] = relationship(back_populates="jobs", foreign_keys=[company_id])
+
+
+class RelationshipType(str, enum.Enum):
+    REPORTS_TO = "reports_to"
+    WORKS_WITH = "works_with"
+    SAME_TEAM = "same_team"
+    SAME_PROJECT = "same_project"
+    MENTORS = "mentors"
+    PEER = "peer"
+    MANAGER = "manager"
+    INTERN = "intern"
+    RECRUITER = "recruiter"
+    HIRING_MANAGER = "hiring_manager"
+
+
+class OrgTeam(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "org_teams"
+
+    company_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    parent_team_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+
+class OrgRelationship(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "org_relationships"
+
+    company_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    related_person_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    relationship_type: Mapped[RelationshipType] = mapped_column(SAEnum(RelationshipType), nullable=False)
+    team_name: Mapped[Optional[str]] = mapped_column(String(255))
+    confidence: Mapped[Optional[float]] = mapped_column(Float, default=0.5)
+    metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
 
 
 class MessageType(str, enum.Enum):

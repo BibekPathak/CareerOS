@@ -116,3 +116,49 @@ class CompanySearchRequest(BaseModel):
 
 class CompanyResearchRequest(BaseModel):
     company_name: str
+
+
+class PersonGraphResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    role: Optional[str] = None
+    team_id: Optional[uuid.UUID] = None
+    influence_score: float = 0.0
+    activity_score: float = 0.0
+    response_probability: float = 0.0
+    referral_probability: float = 0.0
+    expertise_areas: list[str] = []
+
+    model_config = {"from_attributes": True}
+
+
+class OrgTeamResponse(BaseModel):
+    id: uuid.UUID
+    company_id: uuid.UUID
+    name: str
+    parent_team_id: Optional[uuid.UUID] = None
+    description: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class OrgRelationshipResponse(BaseModel):
+    id: uuid.UUID
+    person_id: uuid.UUID
+    related_person_id: uuid.UUID
+    relationship_type: str
+    team_name: Optional[str] = None
+    confidence: float = 0.5
+
+    model_config = {"from_attributes": True}
+
+
+class OrgGraphResponse(BaseModel):
+    teams: list[OrgTeamResponse]
+    relationships: list[OrgRelationshipResponse]
+    people: list[PersonGraphResponse]
+
+
+class PathResponse(BaseModel):
+    path: list[OrgRelationshipResponse]
+    length: int

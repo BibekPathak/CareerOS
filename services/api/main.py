@@ -7,6 +7,7 @@ from routers.resume import router as resume_router
 from routers.company import router as company_router
 from routers.people import router as people_router
 from routers.outreach import router as outreach_router
+from routers.graph import router as graph_router
 
 app = FastAPI(
     title="CareerOS API",
@@ -27,6 +28,7 @@ app.include_router(resume_router, prefix="/api/v1")
 app.include_router(company_router, prefix="/api/v1")
 app.include_router(people_router, prefix="/api/v1")
 app.include_router(outreach_router, prefix="/api/v1")
+app.include_router(graph_router, prefix="/api/v1")
 
 
 @app.get("/health")

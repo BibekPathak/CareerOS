@@ -7,6 +7,7 @@ from repositories import (
     CompanyRepository, CompanyProfileRepository, PersonRepository,
     PersonProfileRepository, JobRepository, OutreachMessageRepository,
     InteractionRepository, NoteRepository, EmbeddingRepository,
+    OrgTeamRepository, OrgRelationshipRepository,
 )
 
 
@@ -56,3 +57,11 @@ async def get_note_repo(session: AsyncSession = Depends(get_db)) -> NoteReposito
 
 async def get_embedding_repo(session: AsyncSession = Depends(get_db)) -> EmbeddingRepository:
     return EmbeddingRepository(session)
+
+
+async def get_org_team_repo(session: AsyncSession = Depends(get_db)) -> OrgTeamRepository:
+    return OrgTeamRepository(session)
+
+
+async def get_org_relationship_repo(session: AsyncSession = Depends(get_db)) -> OrgRelationshipRepository:
+    return OrgRelationshipRepository(session)

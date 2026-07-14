@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.models import (
     User, Document, ResumeProfile, Company, CompanyProfile,
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
+    OrgTeam, OrgRelationship,
 )
 
 
@@ -167,6 +168,16 @@ class PersonRepository:
         await self.session.flush()
         return people
 
+    async def update_graph_fields(self, person_id, **kwargs) -> Person | None:
+        person = await self.session.get(Person, person_id)
+        if not person:
+            return None
+        for key, value in kwargs.items():
+            if hasattr(person, key):
+                setattr(person, key, value)
+        await self.session.flush()
+        return person
+
 
 class PersonProfileRepository:
     def __init__(self, session: AsyncSession):
@@ -294,3 +305,105 @@ class EmbeddingRepository:
             "limit": limit,
         })
         return list(result.all())
+
+
+class OrgTeamRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_company(self, company_id) -> list[OrgTeam]:
+        result = await self.session.execute(
+            select(OrgTeam).where(OrgTeam.company_id == company_id)
+        )
+        return list(result.scalars().all())
+
+    async def get_by_name(self, company_id, name: str) -> Optional[OrgTeam]:
+        result = await self.session.execute(
+            select(OrgTeam).where(OrgTeam.company_id == company_id, OrgTeam.name == name)
+        )
+        return result.scalar_one_or_none()
+
+    async def create(self, team: OrgTeam) -> OrgTeam:
+        self.session.add(team)
+        await self.session.flush()
+        return team
+
+    async def create_many(self, teams: list[OrgTeam]) -> list[OrgTeam]:
+        self.session.add_all(teams)
+        await self.session.flush()
+        return teams
+
+    async def clear_company(self, company_id):
+        await self.session.execute(
+            select(OrgTeam).where(OrgTeam.company_id == company_id).delete()
+        )
+        await self.session.flush()
+
+
+class OrgRelationshipRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_company(self, company_id) -> list[OrgRelationship]:
+        result = await self.session.execute(
+            select(OrgRelationship).where(OrgRelationship.company_id == company_id)
+        )
+        return list(result.scalars().all())
+
+    async def get_by_person(self, person_id) -> list[OrgRelationship]:
+        result = await self.session.execute(
+            select(OrgRelationship).where(
+                (OrgRelationship.person_id == person_id) |
+                (OrgRelationship.related_person_id == person_id)
+            )
+        )
+        return list(result.scalars().all())
+
+    async def create_many(self, relationships: list[OrgRelationship]) -> list[OrgRelationship]:
+        self.session.add_all(relationships)
+        await self.session.flush()
+        return relationships
+
+    async def find_path(self, from_person_id, to_person_id, max_depth: int = 4) -> list[OrgRelationship]:
+        from sqlalchemy import text
+        sql = text("""
+            WITH RECURSIVE path AS (
+                SELECT person_id, related_person_id, 1 AS depth,
+                       ARRAY[person_id, related_person_id] AS visited
+                FROM org_relationships
+                WHERE person_id = :from_id
+                UNION
+                SELECT r.person_id, r.related_person_id, p.depth + 1,
+                       p.visited || r.related_person_id
+                FROM org_relationships r
+                JOIN path p ON r.person_id = p.related_person_id
+                WHERE p.depth < :max_depth
+                AND NOT r.related_person_id = ANY(p.visited)
+            )
+            SELECT * FROM path
+            WHERE related_person_id = :to_id
+            ORDER BY depth
+            LIMIT 1
+        """)
+        result = await self.session.execute(sql, {
+            "from_id": from_person_id,
+            "to_id": to_person_id,
+            "max_depth": max_depth,
+        })
+        rows = result.all()
+        if not rows:
+            return []
+        visited = rows[0].visited
+        rels = await self.session.execute(
+            select(OrgRelationship).where(
+                OrgRelationship.person_id.in_(visited),
+                OrgRelationship.related_person_id.in_(visited),
+            )
+        )
+        return list(rels.scalars().all())
+
+    async def clear_company(self, company_id):
+        await self.session.execute(
+            select(OrgRelationship).where(OrgRelationship.company_id == company_id).delete()
+        )
+        await self.session.flush()

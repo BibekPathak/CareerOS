@@ -179,6 +179,45 @@ class OutreachOutput(BaseModel):
     messages: MessageSet
 
 
+class RelationshipEdge(BaseModel):
+    person_id: str
+    related_person_id: str
+    relationship_type: str
+    team_name: str | None = None
+    confidence: float = 0.5
+
+
+class OrgTeamNode(BaseModel):
+    id: str | None = None
+    name: str
+    parent_team_id: str | None = None
+    description: str | None = None
+
+
+class GraphPerson(BaseModel):
+    id: str | None = None
+    name: str
+    role: str | None = None
+    team_id: str | None = None
+    influence_score: float = 0.0
+    activity_score: float = 0.0
+    response_probability: float = 0.0
+    referral_probability: float = 0.0
+    expertise_areas: list[str] = []
+
+
+class OrgGraphInput(BaseModel):
+    company_name: str
+    people: list[GraphPerson]
+    company_profile: CompanyIntelligence | None = None
+
+
+class OrgGraphOutput(BaseModel):
+    teams: list[OrgTeamNode]
+    relationships: list[RelationshipEdge]
+    people: list[GraphPerson]
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -188,4 +227,6 @@ __all__ = [
     "PeopleDiscoveryInput", "Person", "PeopleDiscoveryOutput",
     "RankingInput", "RankedPerson", "RankingOutput",
     "OutreachInput", "MessageSet", "OutreachOutput",
+    "RelationshipEdge", "OrgTeamNode", "GraphPerson",
+    "OrgGraphInput", "OrgGraphOutput",
 ]
