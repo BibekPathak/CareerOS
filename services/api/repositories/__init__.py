@@ -9,7 +9,7 @@ from models.models import (
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
     OrgTeam, OrgRelationship, ResumeMatch, OutreachIntelligence,
     ConversationMemory, FollowUpSuggestion, DailyBrief,
-    CareerGoal, GoalEvent,
+    CareerGoal, GoalEvent, KnowledgeGraphEntity, KnowledgeGraphEdge,
 )
 
 
@@ -626,3 +626,126 @@ class GoalEventRepository:
         self.session.add(event)
         await self.session.flush()
         return event
+
+
+class KnowledgeGraphRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def find_entities(self, entity_type: str | None = None, name: str | None = None) -> list[KnowledgeGraphEntity]:
+        query = select(KnowledgeGraphEntity)
+        if entity_type:
+            query = query.where(KnowledgeGraphEntity.type == entity_type)
+        if name:
+            query = query.where(KnowledgeGraphEntity.name.ilike(f"%{name}%"))
+        result = await self.session.execute(query.order_by(KnowledgeGraphEntity.name))
+        return list(result.scalars().all())
+
+    async def get_entity(self, entity_id) -> Optional[KnowledgeGraphEntity]:
+        return await self.session.get(KnowledgeGraphEntity, entity_id)
+
+    async def create_entity(self, entity: KnowledgeGraphEntity) -> KnowledgeGraphEntity:
+        self.session.add(entity)
+        await self.session.flush()
+        return entity
+
+    async def get_or_create_entity(self, type: str, name: str, source_id=None) -> KnowledgeGraphEntity:
+        result = await self.session.execute(
+            select(KnowledgeGraphEntity).where(
+                KnowledgeGraphEntity.type == type,
+                KnowledgeGraphEntity.name == name,
+            )
+        )
+        existing = result.scalar_one_or_none()
+        if existing:
+            return existing
+        entity = KnowledgeGraphEntity(type=type, name=name, source_id=source_id)
+        self.session.add(entity)
+        await self.session.flush()
+        return entity
+
+    async def create_edge(self, edge: KnowledgeGraphEdge) -> KnowledgeGraphEdge:
+        existing = await self.session.execute(
+            select(KnowledgeGraphEdge).where(
+                KnowledgeGraphEdge.source_id == edge.source_id,
+                KnowledgeGraphEdge.target_id == edge.target_id,
+                KnowledgeGraphEdge.relationship_type == edge.relationship_type,
+            )
+        )
+        if existing.scalar_one_or_none():
+            return edge
+        self.session.add(edge)
+        await self.session.flush()
+        return edge
+
+    async def get_neighbors(self, entity_id, relationship_type: str | None = None, max_depth: int = 1) -> list[dict]:
+        if max_depth == 1:
+            query = (
+                select(KnowledgeGraphEntity, KnowledgeGraphEdge)
+                .join(KnowledgeGraphEdge, (KnowledgeGraphEdge.target_id == KnowledgeGraphEntity.id))
+                .where(KnowledgeGraphEdge.source_id == entity_id)
+            )
+            if relationship_type:
+                query = query.where(KnowledgeGraphEdge.relationship_type == relationship_type)
+            result = await self.session.execute(query)
+            return [
+                {"entity": {"id": str(e.id), "type": e.type, "name": e.name},
+                 "edge": {"type": edge.relationship_type, "weight": edge.weight}}
+                for e, edge in result.all()
+            ]
+        return []
+
+    async def find_path(self, from_type: str, from_name: str, to_type: str, to_name: str, max_depth: int = 4) -> list[dict]:
+        from sqlalchemy import text
+        sql = text("""
+            WITH RECURSIVE path AS (
+                SELECT e1.id AS start_id, e2.id AS end_id, 1 AS depth,
+                       ARRAY[e1.id, e2.id] AS visited,
+                       ARRAY[edge.relationship_type] AS edge_types
+                FROM knowledge_graph_entities e1
+                JOIN knowledge_graph_edges edge ON edge.source_id = e1.id
+                JOIN knowledge_graph_entities e2 ON e2.id = edge.target_id
+                WHERE e1.type = :from_type AND e1.name ILIKE :from_name
+                UNION
+                SELECT p.start_id, e2.id, p.depth + 1,
+                       p.visited || e2.id,
+                       p.edge_types || edge.relationship_type
+                FROM path p
+                JOIN knowledge_graph_edges edge ON edge.source_id = p.end_id
+                JOIN knowledge_graph_entities e2 ON e2.id = edge.target_id
+                WHERE p.depth < :max_depth
+                AND NOT e2.id = ANY(p.visited)
+            )
+            SELECT DISTINCT ON (p.depth) p.depth, p.visited, p.edge_types
+            FROM path p
+            JOIN knowledge_graph_entities e ON e.id = p.end_id
+            WHERE e.type = :to_type AND e.name ILIKE :to_name
+            ORDER BY p.depth
+            LIMIT 1
+        """)
+        result = await self.session.execute(sql, {
+            "from_type": from_type, "from_name": f"%{from_name}%",
+            "to_type": to_type, "to_name": f"%{to_name}%",
+            "max_depth": max_depth,
+        })
+        rows = result.all()
+        if not rows:
+            return []
+
+        visited_ids = rows[0].visited
+        edge_types = rows[0].edge_types
+        entities = await self.session.execute(
+            select(KnowledgeGraphEntity).where(KnowledgeGraphEntity.id.in_(visited_ids))
+        )
+        entity_map = {str(e.id): {"type": e.type, "name": e.name} for e in entities.scalars().all()}
+
+        path = []
+        for i in range(len(visited_ids) - 1):
+            src_id = str(visited_ids[i])
+            tgt_id = str(visited_ids[i + 1])
+            path.append({
+                "from": entity_map.get(src_id, {"id": str(src_id)}),
+                "to": entity_map.get(tgt_id, {"id": str(tgt_id)}),
+                "via": edge_types[i] if i < len(edge_types) else "connected",
+            })
+        return path

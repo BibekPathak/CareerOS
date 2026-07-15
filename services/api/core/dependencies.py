@@ -11,6 +11,7 @@ from repositories import (
     ResumeMatchRepository, OutreachIntelligenceRepository,
     ConversationMemoryRepository, FollowUpSuggestionRepository,
     DailyBriefRepository, CareerGoalRepository, GoalEventRepository,
+    KnowledgeGraphRepository,
 )
 
 
@@ -96,3 +97,7 @@ async def get_career_goal_repo(session: AsyncSession = Depends(get_db)) -> Caree
 
 async def get_goal_event_repo(session: AsyncSession = Depends(get_db)) -> GoalEventRepository:
     return GoalEventRepository(session)
+
+
+async def get_knowledge_graph_repo(session: AsyncSession = Depends(get_db)) -> KnowledgeGraphRepository:
+    return KnowledgeGraphRepository(session)
