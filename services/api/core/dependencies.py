@@ -10,6 +10,7 @@ from repositories import (
     OrgTeamRepository, OrgRelationshipRepository,
     ResumeMatchRepository, OutreachIntelligenceRepository,
     ConversationMemoryRepository, FollowUpSuggestionRepository,
+    DailyBriefRepository, CareerGoalRepository, GoalEventRepository,
 )
 
 
@@ -83,3 +84,15 @@ async def get_conversation_memory_repo(session: AsyncSession = Depends(get_db)) 
 
 async def get_follow_up_repo(session: AsyncSession = Depends(get_db)) -> FollowUpSuggestionRepository:
     return FollowUpSuggestionRepository(session)
+
+
+async def get_daily_brief_repo(session: AsyncSession = Depends(get_db)) -> DailyBriefRepository:
+    return DailyBriefRepository(session)
+
+
+async def get_career_goal_repo(session: AsyncSession = Depends(get_db)) -> CareerGoalRepository:
+    return CareerGoalRepository(session)
+
+
+async def get_goal_event_repo(session: AsyncSession = Depends(get_db)) -> GoalEventRepository:
+    return GoalEventRepository(session)

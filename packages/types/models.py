@@ -324,6 +324,93 @@ class FollowUpSuggestionOut(BaseModel):
     is_read: bool
 
 
+class BriefItem(BaseModel):
+    type: str
+    title: str
+    description: str
+    person_name: str | None = None
+    company_name: str | None = None
+    url: str | None = None
+    urgency: str = "medium"
+
+
+class DailyBriefInput(BaseModel):
+    user_id: str
+    new_jobs: list[dict] = []
+    recruiter_changes: list[dict] = []
+    engagement_signals: list[dict] = []
+    follow_ups_due: list[dict] = []
+    company_news: list[dict] = []
+
+
+class DailyBriefOutput(BaseModel):
+    summary: str
+    items: list[BriefItem]
+
+
+class PlanStep(BaseModel):
+    id: str
+    phase: str
+    action: str
+    tool: str
+    input: dict = {}
+    output: dict | None = None
+    status: str = "pending"
+    reasoning: str = ""
+    deadline: str | None = None
+
+
+class CareerGoalInput(BaseModel):
+    title: str
+    target_company: str | None = None
+    target_role: str | None = None
+    deadline: str | None = None
+    priority: str = "medium"
+    context: str | None = None
+
+
+class CareerPlanOutput(BaseModel):
+    title: str
+    plan: list[PlanStep]
+    summary: str
+    estimated_duration: str | None = None
+
+
+class GoalCreateResponse(BaseModel):
+    id: str
+    title: str
+    plan: list[PlanStep]
+    summary: str
+
+
+class KnowledgeEntity(BaseModel):
+    id: str | None = None
+    type: str
+    name: str
+    metadata: dict | None = None
+
+
+class KnowledgeEdge(BaseModel):
+    source_id: str
+    target_id: str
+    relationship_type: str
+    weight: float = 1.0
+    metadata: dict | None = None
+
+
+class KnowledgeGraphQuery(BaseModel):
+    entity_type: str | None = None
+    entity_name: str | None = None
+    relationship_type: str | None = None
+    max_depth: int = 2
+
+
+class KnowledgePath(BaseModel):
+    path: list[dict]
+    length: int
+    explanation: str | None = None
+
+
 __all__ = [
     "ResumeInput", "ResumeOutput", "Project", "Experience",
     "CompanyResearchInput", "CompanyIntelligence", "CompanyProfile",
@@ -340,4 +427,7 @@ __all__ = [
     "OutreachIntelligenceInput", "OutreachIntelligenceOutput",
     "ConversationEvent", "TimelineEntry",
     "MemoryAnalysisInput", "MemoryAnalysisOutput", "FollowUpSuggestionOut",
+    "BriefItem", "DailyBriefInput", "DailyBriefOutput",
+    "PlanStep", "CareerGoalInput", "CareerPlanOutput", "GoalCreateResponse",
+    "KnowledgeEntity", "KnowledgeEdge",
 ]

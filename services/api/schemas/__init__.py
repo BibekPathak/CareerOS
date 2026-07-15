@@ -254,3 +254,63 @@ class FollowUpSuggestionResponse(BaseModel):
 class TimelineResponse(BaseModel):
     events: list[ConversationEventResponse]
     suggestions: list[FollowUpSuggestionResponse]
+
+
+class DailyBriefResponse(BaseModel):
+    id: uuid.UUID
+    date: datetime
+    summary: Optional[str] = None
+    items: list[dict] = []
+    is_read: bool = False
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DailyBriefGenerateResponse(BaseModel):
+    brief: DailyBriefResponse
+    generated: bool
+
+
+class PlanStepResponse(BaseModel):
+    id: str
+    phase: str
+    action: str
+    tool: str
+    input: dict = {}
+    output: Optional[dict] = None
+    status: str = "pending"
+    reasoning: str = ""
+    deadline: Optional[str] = None
+
+
+class CareerGoalResponse(BaseModel):
+    id: uuid.UUID
+    title: str
+    target_company: Optional[str] = None
+    target_role: Optional[str] = None
+    deadline: Optional[datetime] = None
+    priority: str = "medium"
+    status: str = "active"
+    plan: list[PlanStepResponse] = []
+    current_step_index: int = 0
+    progress_metrics: Optional[dict] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class GoalEventResponse(BaseModel):
+    id: uuid.UUID
+    goal_id: uuid.UUID
+    event_type: str
+    event_data: Optional[dict] = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class GoalCreateResponse(BaseModel):
+    goal: CareerGoalResponse
+    plan_summary: str

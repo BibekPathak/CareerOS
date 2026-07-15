@@ -12,6 +12,8 @@ from routers.job import router as job_router
 from routers.match import router as match_router
 from routers.memory import router as memory_router
 from routers.extension import router as extension_router
+from routers.daily import router as daily_router
+from routers.goal import router as goal_router
 
 app = FastAPI(
     title="CareerOS API",
@@ -37,6 +39,8 @@ app.include_router(job_router, prefix="/api/v1")
 app.include_router(match_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(extension_router, prefix="/api/v1")
+app.include_router(daily_router, prefix="/api/v1")
+app.include_router(goal_router, prefix="/api/v1")
 
 
 @app.get("/health")

@@ -8,7 +8,8 @@ from models.models import (
     User, Document, ResumeProfile, Company, CompanyProfile,
     Person, PersonProfile, Job, OutreachMessage, Interaction, Note, Embedding,
     OrgTeam, OrgRelationship, ResumeMatch, OutreachIntelligence,
-    ConversationMemory, FollowUpSuggestion,
+    ConversationMemory, FollowUpSuggestion, DailyBrief,
+    CareerGoal, GoalEvent,
 )
 
 
@@ -532,3 +533,96 @@ class FollowUpSuggestionRepository:
         if sug:
             sug.is_read = True
             await self.session.flush()
+
+
+class DailyBriefRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_today(self, user_id) -> Optional[DailyBrief]:
+        from datetime import date
+        result = await self.session.execute(
+            select(DailyBrief).where(
+                DailyBrief.user_id == user_id,
+                DailyBrief.date == date.today(),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def get_recent(self, user_id, limit: int = 7) -> list[DailyBrief]:
+        result = await self.session.execute(
+            select(DailyBrief)
+            .where(DailyBrief.user_id == user_id)
+            .order_by(DailyBrief.date.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def upsert(self, brief: DailyBrief) -> DailyBrief:
+        existing = await self.get_today(brief.user_id)
+        if existing:
+            brief.id = existing.id
+            await self.session.merge(brief)
+            await self.session.flush()
+            return brief
+        self.session.add(brief)
+        await self.session.flush()
+        return brief
+
+    async def mark_read(self, brief_id) -> None:
+        brief = await self.session.get(DailyBrief, brief_id)
+        if brief:
+            brief.is_read = True
+            await self.session.flush()
+
+
+class CareerGoalRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_id(self, goal_id) -> Optional[CareerGoal]:
+        return await self.session.get(CareerGoal, goal_id)
+
+    async def get_active_by_user(self, user_id) -> list[CareerGoal]:
+        result = await self.session.execute(
+            select(CareerGoal)
+            .where(CareerGoal.user_id == user_id, CareerGoal.status == "active")
+            .order_by(CareerGoal.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def get_by_user(self, user_id) -> list[CareerGoal]:
+        result = await self.session.execute(
+            select(CareerGoal)
+            .where(CareerGoal.user_id == user_id)
+            .order_by(CareerGoal.created_at.desc())
+        )
+        return list(result.scalars().all())
+
+    async def create(self, goal: CareerGoal) -> CareerGoal:
+        self.session.add(goal)
+        await self.session.flush()
+        return goal
+
+    async def update(self, goal: CareerGoal) -> CareerGoal:
+        await self.session.merge(goal)
+        await self.session.flush()
+        return goal
+
+
+class GoalEventRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_goal(self, goal_id) -> list[GoalEvent]:
+        result = await self.session.execute(
+            select(GoalEvent)
+            .where(GoalEvent.goal_id == goal_id)
+            .order_by(GoalEvent.created_at.asc())
+        )
+        return list(result.scalars().all())
+
+    async def create(self, event: GoalEvent) -> GoalEvent:
+        self.session.add(event)
+        await self.session.flush()
+        return event

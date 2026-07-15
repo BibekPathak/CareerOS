@@ -329,3 +329,57 @@ class FollowUpSuggestion(Base, UUIDMixin, TimestampMixin):
     suggested_message: Mapped[Optional[str]] = mapped_column(Text)
     urgency: Mapped[str] = mapped_column(String(20), default="medium")
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class DailyBrief(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "daily_briefs"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    date: Mapped[date] = mapped_column(Date, nullable=False)
+    summary: Mapped[Optional[str]] = mapped_column(Text)
+    items: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class CareerGoal(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "career_goals"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_company: Mapped[Optional[str]] = mapped_column(String(255))
+    target_role: Mapped[Optional[str]] = mapped_column(String(255))
+    deadline: Mapped[Optional[date]] = mapped_column(Date)
+    priority: Mapped[str] = mapped_column(String(20), default="medium")
+    status: Mapped[str] = mapped_column(String(50), default="active")
+    plan: Mapped[list[dict]] = mapped_column(JSONB, default=list)
+    current_step_index: Mapped[int] = mapped_column(default=0)
+    progress_metrics: Mapped[Optional[dict]] = mapped_column(JSONB)
+    context_snapshot: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+
+class GoalEvent(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "goal_events"
+
+    goal_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    event_data: Mapped[Optional[dict]] = mapped_column(JSONB)
+
+
+class KnowledgeGraphEntity(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "knowledge_graph_entities"
+
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True))
+    metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
+    embedding = None
+
+
+class KnowledgeGraphEdge(Base, UUIDMixin, TimestampMixin):
+    __tablename__ = "knowledge_graph_edges"
+
+    source_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    target_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    relationship_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+    metadata: Mapped[Optional[dict]] = mapped_column(JSONB)
