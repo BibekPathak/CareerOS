@@ -15,6 +15,7 @@ from routers.extension import router as extension_router
 from routers.daily import router as daily_router
 from routers.goal import router as goal_router
 from routers.knowledge_graph import router as kg_router
+from routers.stats import router as stats_router
 
 app = FastAPI(
     title="CareerOS API",
@@ -43,6 +44,7 @@ app.include_router(extension_router, prefix="/api/v1")
 app.include_router(daily_router, prefix="/api/v1")
 app.include_router(goal_router, prefix="/api/v1")
 app.include_router(kg_router, prefix="/api/v1")
+app.include_router(stats_router, prefix="/api/v1")
 
 
 @app.get("/health")

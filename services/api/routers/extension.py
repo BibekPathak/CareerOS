@@ -9,8 +9,8 @@ from core.database import get_db
 from core.dependencies import (
     get_company_repo, get_person_repo, get_person_profile_repo,
     get_resume_profile_repo, get_outreach_intelligence_repo,
+    get_career_goal_repo,
 )
-from packages.ai.agents.outreach_intelligence_agent import generate_outreach_intelligence
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
@@ -32,8 +32,13 @@ async def profile_intelligence(
     if not company:
         return {
             "matchScore": None,
-            "thingsToMention": [],
+            "likelyInterviewer": None,
+            "hiringManager": None,
+            "recruiter": None,
+            "conversationStarters": [],
+            "topicsToAvoid": [],
             "sharedInterests": [],
+            "bestProject": None,
             "suggestedMessage": None,
             "note": "Company not found in CareerOS. Research it first.",
         }
@@ -44,8 +49,13 @@ async def profile_intelligence(
     if not person:
         return {
             "matchScore": None,
-            "thingsToMention": [],
+            "likelyInterviewer": None,
+            "hiringManager": None,
+            "recruiter": None,
+            "conversationStarters": [],
+            "topicsToAvoid": [],
             "sharedInterests": [],
+            "bestProject": None,
             "suggestedMessage": None,
             "note": "Person not found in CareerOS for this company.",
             "companyId": str(company.id),
@@ -54,25 +64,41 @@ async def profile_intelligence(
     profile_repo = get_person_profile_repo(db)
     person_profile = await profile_repo.get_by_person(person.id)
 
-    things_to_mention = []
-    shared_interests = []
-    suggested_message = None
-    match_score = None
+    match_score = person_profile.score if person_profile and person_profile.score else None
+    role_lower = (req.person_role or "").lower()
+    likely_interviewer = "recruiter" in role_lower or "talent" in role_lower or "hr" in role_lower
+    hiring_manager = "manager" in role_lower or "lead" in role_lower or "head" in role_lower or "director" in role_lower or "vp" in role_lower
+    is_recruiter = "recruiter" in role_lower or "talent" in role_lower or "sourcer" in role_lower or "hr" in role_lower
 
-    if person_profile and person_profile.ranking_factors:
-        match_score = person_profile.score
+    conversation_starters = []
+    topics_to_avoid = []
+    shared_interests = []
+    best_project = None
 
     oi_repo = get_outreach_intelligence_repo(db)
     oi = await oi_repo.get_by_person(person.id)
     if oi:
+        conversation_starters = oi.best_conversation_starters
+        topics_to_avoid = oi.topics_to_avoid
         shared_interests = oi.person_interests
-        if oi.best_conversation_starters:
-            things_to_mention = oi.best_conversation_starters
+
+    suggested_message = None
+    if oi and oi.best_conversation_starters:
+        starter = oi.best_conversation_starters[0]
+        suggested_message = f"Hi {person.name}, {starter}"
+
+    if person.expertise_areas and person.expertise_areas:
+        best_project = person.expertise_areas[0]
 
     return {
         "matchScore": match_score,
-        "thingsToMention": things_to_mention,
+        "likelyInterviewer": likely_interviewer,
+        "hiringManager": hiring_manager,
+        "recruiter": is_recruiter,
+        "conversationStarters": conversation_starters,
+        "topicsToAvoid": topics_to_avoid,
         "sharedInterests": shared_interests,
+        "bestProject": best_project,
         "suggestedMessage": suggested_message,
         "personId": str(person.id),
         "companyId": str(company.id),

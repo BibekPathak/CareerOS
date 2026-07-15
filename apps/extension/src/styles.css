@@ -70,6 +70,22 @@
   margin: 4px 0 8px;
 }
 
+.careeros-intel-row {
+  font-size: 12px;
+  color: #c0c0d0;
+  padding: 2px 0;
+  line-height: 1.6;
+}
+
+.careeros-intel-sub {
+  font-size: 11px;
+  color: #818cf8;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 #careeros-content ul {
   list-style: none;
   padding: 0;
@@ -79,12 +95,7 @@
 #careeros-content li {
   padding: 2px 0;
   color: #c0c0d0;
-}
-
-#careeros-content li::before {
-  content: "•";
-  color: #818cf8;
-  margin-right: 6px;
+  font-size: 12px;
 }
 
 .careeros-message-text {
@@ -121,11 +132,28 @@
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .careeros-btn-primary:hover {
   background: #6366f1;
+}
+
+.careeros-btn-secondary {
+  width: 100%;
+  padding: 10px;
+  background: #2d2d4a;
+  color: #c0c0d0;
+  border: 1px solid #3d3d5a;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.careeros-btn-secondary:hover {
+  background: #3d3d5a;
+  color: #e0e0e0;
 }
 
 #careeros-actions {

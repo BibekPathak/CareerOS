@@ -58,23 +58,36 @@ function renderIntelligence(data: any) {
   content.style.display = "block";
 
   const matchEl = document.getElementById("careeros-match")!;
+  const matchScore = data.matchScore || "N/A";
+  const likelyInterviewer = data.likelyInterviewer ? "✅ Yes" : "❌ No";
+  const hiringManager = data.hiringManager ? "✅ Yes" : "❌ No";
+  const recruiter = data.recruiter ? "✅ Yes" : "❌ No";
   matchEl.innerHTML = `
-    <div class="careeros-section-title">Resume Match</div>
-    <div class="careeros-match-score">${data.matchScore || "N/A"}%</div>
+    <div class="careeros-section-title">Profile Intelligence</div>
+    <div class="careeros-match-score">${matchScore}%</div>
+    <div class="careeros-intel-row">Likely Interviewer: ${likelyInterviewer}</div>
+    <div class="careeros-intel-row">Hiring Manager: ${hiringManager}</div>
+    <div class="careeros-intel-row">Recruiter: ${recruiter}</div>
   `;
 
   const mentionEl = document.getElementById("careeros-mention")!;
-  const mentions = data.thingsToMention || [];
+  const starters = data.conversationStarters || [];
+  const avoid = data.topicsToAvoid || [];
+  const bestProject = data.bestProject || "";
   mentionEl.innerHTML = `
-    <div class="careeros-section-title">Things to Mention</div>
-    <ul>${mentions.map((m: string) => `<li>${m}</li>`).join("")}</ul>
+    <div class="careeros-section-title">Conversation Strategy</div>
+    <div class="careeros-intel-sub">Starters:</div>
+    <ul>${starters.map((s: string) => `<li>💬 ${s}</li>`).join("") || "<li>No starters available</li>"}</ul>
+    <div class="careeros-intel-sub">Avoid:</div>
+    <ul>${avoid.map((a: string) => `<li>⚠️ ${a}</li>`).join("") || ""}</ul>
+    ${bestProject ? `<div class="careeros-intel-sub">Best Project to Mention:</div><div class="careeros-message-text">${bestProject}</div>` : ""}
   `;
 
   const interestsEl = document.getElementById("careeros-interests")!;
-  const interests = data.sharedInterests || [];
+  const shared = data.sharedInterests || [];
   interestsEl.innerHTML = `
     <div class="careeros-section-title">Shared Interests</div>
-    <ul>${interests.map((i: string) => `<li>${i}</li>`).join("")}</ul>
+    <ul>${shared.map((i: string) => `<li>✦ ${i}</li>`).join("") || "<li>No shared interests found</li>"}</ul>
   `;
 
   const msgEl = document.getElementById("careeros-message")!;
@@ -83,20 +96,26 @@ function renderIntelligence(data: any) {
     msgEl.innerHTML = `
       <div class="careeros-section-title">Suggested Message</div>
       <div class="careeros-message-text">${suggestedMsg}</div>
-      <button id="careeros-copy-msg">Copy</button>
+      <button id="careeros-copy-msg">📋 Copy</button>
     `;
     document.getElementById("careeros-copy-msg")!.onclick = () => {
       navigator.clipboard.writeText(suggestedMsg);
-      alert("Message copied!");
+      const btn = document.getElementById("careeros-copy-msg")!;
+      btn.textContent = "✅ Copied!";
+      setTimeout(() => { btn.textContent = "📋 Copy"; }, 2000);
     };
   }
 
   const actionsEl = document.getElementById("careeros-actions")!;
   actionsEl.innerHTML = `
-    <button id="careeros-open-app" class="careeros-btn-primary">Open in CareerOS</button>
+    <button id="careeros-open-app" class="careeros-btn-primary">🚀 Open CareerOS</button>
+    <button id="careeros-add-goal" class="careeros-btn-secondary">🎯 Add to Goal</button>
   `;
   document.getElementById("careeros-open-app")!.onclick = () => {
     window.open("http://localhost:3000", "_blank");
+  };
+  document.getElementById("careeros-add-goal")!.onclick = () => {
+    window.open("http://localhost:3000/goals/create", "_blank");
   };
 }
 

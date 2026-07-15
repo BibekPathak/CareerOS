@@ -1,17 +1,21 @@
 import uuid
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_db
 from core.dependencies import (
     get_daily_brief_repo, get_job_repo, get_company_repo,
     get_follow_up_repo, get_person_repo, get_company_profile_repo,
+    get_career_goal_repo,
 )
 from models.models import DailyBrief
 from schemas import DailyBriefResponse, DailyBriefGenerateResponse
 from packages.ai.agents.daily_agent import generate_daily_brief
+from packages.ai.agents.mission_agent import generate_todays_mission
 
 router = APIRouter(prefix="/daily", tags=["daily"])
 
@@ -147,3 +151,63 @@ async def mark_read(
     brief_repo = get_daily_brief_repo(db)
     await brief_repo.mark_read(brief_id)
     return {"status": "read"}
+
+
+class MissionResponse(BaseModel):
+    goals: list[dict]
+    summary_stats: dict = {}
+
+
+@router.post("/mission/{user_id}")
+async def generate_mission(
+    user_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    goal_repo = get_career_goal_repo(db)
+    goals = await goal_repo.get_active_by_user(user_id)
+
+    goals_data = []
+    for g in goals:
+        plan = g.plan or []
+        next_step = plan[g.current_step_index] if g.current_step_index < len(plan) else None
+        goals_data.append({
+            "title": g.title,
+            "company": g.target_company or "",
+            "role": g.target_role or "",
+            "deadline": str(g.deadline) if g.deadline else "",
+            "priority": g.priority,
+            "next_step": next_step.get("action", "") if next_step else "",
+            "progress": f"Step {g.current_step_index + 1} of {len(plan)}" if plan else "No plan yet",
+        })
+
+    follow_up_repo = get_follow_up_repo(db)
+    suggestions = await follow_up_repo.get_by_user(user_id)
+    follow_ups = []
+    for s in suggestions:
+        if not s.is_read and s.urgency in ("high", "medium"):
+            person_repo = get_person_repo(db)
+            person = await person_repo.get_by_id(s.person_id)
+            follow_ups.append({
+                "title": f"Follow up with {person.name if person else 'someone'}",
+                "description": s.reasoning or "",
+                "urgency": s.urgency,
+            })
+
+    people = await get_person_repo(db).get_by_user(user_id) if hasattr(get_person_repo(db), 'get_by_user') else []
+    stats = {
+        "Active goals": len(goals),
+        "Follow-ups due": len(follow_ups),
+    }
+
+    result = await generate_todays_mission(
+        goals=goals_data,
+        follow_ups=follow_ups,
+        recent_activity=[],
+        stats=stats,
+    )
+
+    return MissionResponse(
+        goals=[g.model_dump() for g in result.goals],
+        summary_stats=result.summary_stats,
+    )
+

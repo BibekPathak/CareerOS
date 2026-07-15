@@ -429,5 +429,5 @@ __all__ = [
     "MemoryAnalysisInput", "MemoryAnalysisOutput", "FollowUpSuggestionOut",
     "BriefItem", "DailyBriefInput", "DailyBriefOutput",
     "PlanStep", "CareerGoalInput", "CareerPlanOutput", "GoalCreateResponse",
-    "KnowledgeEntity", "KnowledgeEdge",
+    "KnowledgeEntity", "KnowledgeEdge", "KnowledgeGraphQuery", "KnowledgePath",
 ]
